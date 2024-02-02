@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package service;
+
+option go_package = "gorm_test/device_rpc_client/proto";
+
+message SendCmdRequest {
+  uint64 imei = 1;  //设备号
+  string content = 2;  //指令内容
+}
+
+message SendCmdReply {
+  string message = 1;
+}
+
+message CommonReply {
+  string message = 1;
+}
+
+message OpenShortRecordRequest {
+  uint64 imei = 1;
+  uint64 seconds = 2; //录音时长，0表示持续录音
+}
+
+message VorRecordSwitchRequest {
+  uint64 imei = 1;
+  int32 switch = 2;
+}
+
+service DeviceService {
+  rpc SendCmd (SendCmdRequest) returns (SendCmdReply);
+  rpc OpenShortRecord(OpenShortRecordRequest) returns (CommonReply);
+  rpc VorRecordSwitch(VorRecordSwitchRequest) returns (CommonReply);
+}

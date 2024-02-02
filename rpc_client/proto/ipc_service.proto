@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package service;
+
+option go_package = "gorm_test/rpc_client/proto";
+
+service IpcService {
+  rpc SendStunAddr (SendStunAddrRequest) returns (SendStunAddrReply);
+}
+
+message SendStunAddrRequest {
+  string uid = 1;  //要发往的设备的uid
+  string ip = 2;  //获取到的公网ip
+  int32 port = 3; //获取到的公网port
+}
+
+message SendStunAddrReply {
+  string message = 1;
+  string ipcIp = 2;
+  int32 ipcPort = 3;
+}
