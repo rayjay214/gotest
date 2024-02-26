@@ -52,7 +52,7 @@ func upload(minioClient *minio.Client) {
         return
     }
 
-    uploadInfo, err := minioClient.PutObject(context.Background(), "test", "myobject", file, fileStat.Size(), minio.PutObjectOptions{ContentType: "application/octet-stream"})
+    uploadInfo, err := minioClient.PutObject(context.Background(), "image", "myobject", file, fileStat.Size(), minio.PutObjectOptions{ContentType: "application/octet-stream"})
     if err != nil {
         fmt.Println(err)
         return
@@ -61,7 +61,7 @@ func upload(minioClient *minio.Client) {
 }
 
 func get(minioClient *minio.Client) {
-    object, err := minioClient.GetObject(context.Background(), "test", "myobject", minio.GetObjectOptions{})
+    object, err := minioClient.GetObject(context.Background(), "record", "26191697155_1707219924.amr", minio.GetObjectOptions{})
     if err != nil {
         fmt.Println(err)
         return

@@ -24,9 +24,9 @@ func sendCmd(conn *grpc.ClientConn) {
     client := proto.NewDeviceServiceClient(conn)
 
     req := &proto.SendCmdRequest{
-        Imei: 15300489596,
-        //Content: "SL IPvip.gps666.net#8881#",
-        Content: "SL MIC1",
+        Imei:    13320527396,
+        Content: "SL DP114.215.190.173#8881#",
+        //Content: "SL MIC1",
     }
     resp, err := client.SendCmd(context.Background(), req)
 
@@ -58,7 +58,7 @@ func vorRecordSwitch(conn *grpc.ClientConn) {
 
     req := &proto.VorRecordSwitchRequest{
         //Imei: 13320465357,
-        Imei:   13320527396,
+        Imei:   58231222504,
         Switch: 1,
     }
     resp, err := client.VorRecordSwitch(context.Background(), req)
