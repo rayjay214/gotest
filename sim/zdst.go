@@ -125,8 +125,8 @@ func ZdGet(iccid string) (ZdGetResult, error) {
 }
 
 // 查询可续费套餐
-func ZdQueryPackage(iccid string) (ZdGetResult, error) {
-	var result ZdGetResult
+func ZdQueryPackage(iccid string) (ZdBatchRenewPackageInfo, error) {
+	var result ZdBatchRenewPackageInfo
 
 	url := baseUrl + queryPackageMethod
 	url += fmt.Sprintf("&clientid=%v", clientId)
