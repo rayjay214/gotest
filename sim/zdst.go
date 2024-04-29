@@ -13,10 +13,13 @@ import (
 
 var (
 	//clientId           = "402880906dfd7de4016e0180834f19cb"  //xx
-	clientId           = "4028808f81003d8801811814eab5406a" //qx
-	baseUrl            = "http://cmpapi.zdm2m.com/"
-	getMethod          = "smsApi.do?querycard"
-	queryPackageMethod = "smsApi.do?batchQueryCardsRenewPackageInfo"
+	//clientId                = "4028808f81003d8801811814eab5406a" //qx
+	clientId                = "402880208e080e4c018e0d4844c12865" //ms
+	baseUrl                 = "http://cmpapi.zdm2m.com/"
+	getMethod               = "smsApi.do?querycard"
+	queryPackageMethod      = "smsApi.do?batchQueryCardsRenewPackageInfo"
+	packageRenewMethod      = "smsApi.do?packageRenew"
+	additionalPackageMethod = "smsApi.do?additionalPackage"
 )
 
 type ZdPackageMsg struct {
@@ -77,6 +80,13 @@ type ZdBatchRenewPackageInfo struct {
 	Data       []ZdRenewPackageInfo `json:"data"`
 	ResultMsg  string               `json:"resultmsg"`
 	ResultCode string               `json:"resultcode"`
+}
+
+type ZdRenewResult struct {
+	ResultMsg  string `json:"resultmsg"`
+	ResultCode string `json:"resultcode"`
+	Balance    string `json:"balance"`
+	Cost       string `json:"cost"`
 }
 
 func genSign(signStr string) string {
@@ -144,7 +154,50 @@ func ZdQueryPackage(iccid string) (ZdBatchRenewPackageInfo, error) {
 	return result, nil
 }
 
+// 续费短信，基础套餐
+func ZdPackageRenew(iccid string, genre, amount int) (ZdRenewResult, error) {
+	var result ZdRenewResult
+
+	url := baseUrl + packageRenewMethod
+	url += fmt.Sprintf("&clientid=%v", clientId)
+	url += fmt.Sprintf("&cardno=%v", iccid)
+	url += fmt.Sprintf("&amount=%v", amount)
+	url += fmt.Sprintf("&genre=%v", genre)
+	url += fmt.Sprintf("&sign=%v", genSign(fmt.Sprintf("clientid=%v&cardno=%v&amount=%v&genre=%v", clientId, iccid, amount, genre)))
+	response, err := getUrl(url)
+	if err != nil {
+		return result, err
+	}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return result, err
+	}
+	fmt.Println(result)
+	return result, nil
+}
+
+// 续费加油包
+func ZdAdditionalPackage(iccid, packagecode string) (ZdRenewResult, error) {
+	var result ZdRenewResult
+
+	url := baseUrl + additionalPackageMethod
+	url += fmt.Sprintf("&clientid=%v", clientId)
+	url += fmt.Sprintf("&cardno=%v", iccid)
+	url += fmt.Sprintf("&packagecode=%v", packagecode)
+	url += fmt.Sprintf("&sign=%v", genSign(fmt.Sprintf("clientid=%v&cardno=%v&packagecode=%v", clientId, iccid, packagecode)))
+	response, err := getUrl(url)
+	if err != nil {
+		return result, err
+	}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return result, err
+	}
+	fmt.Println(result)
+	return result, nil
+}
+
 func main() {
-	ZdGet("1441594933091")
-	ZdQueryPackage("1441594933091")
+	ZdGet("898604B8262270090149")
+	ZdQueryPackage("898604B8262270090149")
 }

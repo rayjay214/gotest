@@ -25,24 +25,37 @@ type PayOrder struct {
 }
 
 type Device struct {
-	Imei       int64     `json:"imei" gorm:"primaryKey;type:bigint unsigned;comment:设备号" db:"imei"`
-	Pwd        string    `json:"pwd" gorm:"type:varchar(64);comment:设备号登录密码"`
-	CarName    string    `json:"carName" gorm:"type:varchar(32);comment:设备名称"`
-	StartTime  time.Time `json:"startTime" gorm:"type:datetime;comment:设备激活时间"`
-	Expiration int64     `json:"expiration" gorm:"type:bigint;comment:设备使用期限"`
-	DeviceType string    `json:"deviceType" gorm:"type:varchar(128);comment:设备型号" db:"device_type"`
-	Iccid      string    `json:"iccid" gorm:"type:varchar(64);comment:设备上报ICCID"`
-	BindPhone  string    `json:"bindPhone" gorm:"type:varchar(64);comment:绑定手机号"`
-	Switch     int64     `json:"switch" gorm:"type:bigint unsigned;comment:增值开关"`
-	FamilyId   int64     `json:"familyId" gorm:"type:bigint unsigned;comment:所属的familyid"`
-	Mode       string    `json:"mode" gorm:"type:varchar(4);comment:设备模式"`
-	Status     string    `json:"status" gorm:"type:varchar(4);comment:设备状态"`
-	Protocol   string    `json:"protocol" gorm:"type:varchar(4);comment:设备协议"`
+	Imei             int64     `json:"imei" gorm:"primaryKey;type:bigint unsigned;comment:设备号" db:"imei"`
+	Pwd              string    `json:"pwd" gorm:"type:varchar(64);comment:设备号登录密码"`
+	CarName          string    `json:"carName" gorm:"type:varchar(32);comment:设备名称"`
+	StartTime        time.Time `json:"startTime" gorm:"type:datetime;comment:设备激活时间"`
+	Expiration       int64     `json:"expiration" gorm:"type:bigint;comment:设备使用期限"`
+	DeviceType       string    `json:"deviceType" gorm:"type:varchar(128);comment:设备型号" db:"device_type"`
+	Iccid            string    `json:"iccid" gorm:"type:varchar(64);comment:设备上报ICCID"`
+	BindPhone        string    `json:"bindPhone" gorm:"type:varchar(64);comment:绑定手机号"`
+	Switch           int64     `json:"switch" gorm:"type:bigint unsigned;comment:增值开关"`
+	FamilyId         int64     `json:"familyId" gorm:"type:bigint unsigned;comment:所属的familyid"`
+	GroupId          int64     `json:"groupId" gorm:"type:bigint unsigned;comment:所属的分组"`
+	TerminalFamilyId int64     `json:"terminalFamilyId" gorm:"type:bigint unsigned;comment:所属的终端familyid"`
+	TerminalGroupId  int64     `json:"terminalGroupId" gorm:"type:bigint unsigned;comment:所属的终端分组id"`
+	Mode             string    `json:"mode" gorm:"type:varchar(4);comment:设备模式"`
+	Status           string    `json:"status" gorm:"type:varchar(4);comment:设备状态"`
+	Protocol         string    `json:"protocol" gorm:"type:varchar(4);comment:设备协议"`
+	ShakeValue       int32     `json:"shakeValue" gorm:"type:int;comment:震动敏感度"`
 	//CreateBy   int64     `json:"createBy" gorm:"index;comment:创建者"`
 	//UpdateBy   int64     `json:"updateBy" gorm:"index;comment:更新者"`
 	//CreatedAt  time.Time `json:"createdAt" gorm:"comment:创建时间"`
 	//UpdatedAt  time.Time `json:"updatedAt" gorm:"comment:最后更新时间"`
 	//DeletedAt  time.Time `json:"deletedAt" gorm:"index;comment:删除时间"`
+}
+
+type Fence struct {
+	Id          int64  `json:"id" comment:"id"`
+	Name        string `json:"name" gorm:"type:varchar(500);comment:围栏名称"`
+	FenceType   string `json:"fenceType" gorm:"type:varchar(4);comment:围栏类型, 字典：fence_type" db:"fence_type"`
+	Imei        int64  `json:"imei" gorm:"type:bigint unsigned;comment:车载设备IMEI"`
+	Value       string `json:"value" gorm:"type:varchar(3000);comment:json串"`
+	FenceSwitch string `json:"fenceSwitch" gorm:"type:varchar(4);comment:围栏报警开关, 字典: fence_switch" db:"fence_switch"`
 }
 
 func MapToStruct(data []interface{}, structToMap interface{}) error {

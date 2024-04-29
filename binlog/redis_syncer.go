@@ -11,32 +11,35 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gotest/binlog/model"
 	"os"
+	"strconv"
 )
 
 var (
 	rdb  *redis.Client
 	pipe *redis.Pipeline
+	db   *sqlx.DB
 )
 
-func initRedis() {
+func initStorage() {
+	var err error
 	rdb = redis.NewClient(&redis.Options{
 		Addr: "47.107.69.24:6480",
 		DB:   0,
 	})
 	pipe = rdb.Pipeline().(*redis.Pipeline)
-}
 
-func loadData() {
 	address := fmt.Sprintf("%v:%v@tcp(%v)/xx?parseTime=true&timeout=5s&readTimeout=10s", "admin", "shht", "47.107.69.24:8000")
-	db, err := sqlx.Open("mysql", address)
+	db, err = sqlx.Open("mysql", address)
 	if err != nil {
 		log.Error("open mysql failed,", err)
 		return
 	}
+}
 
+func loadDevice() {
 	var devices []model.Device
 
-	err = db.Select(&devices, "select imei,device_type,protocol from device")
+	err := db.Select(&devices, "select imei,device_type,protocol from device")
 	if err != nil {
 		log.Error("exec failed, ", err)
 		return
@@ -49,6 +52,26 @@ func loadData() {
 			"device_type": v.DeviceType,
 			"protocol":    v.Protocol,
 			"iccid":       v.Iccid,
+		})
+	}
+	pipe.Exec(context.Background())
+}
+
+func loadFence() {
+	var fenceList []model.Fence
+
+	err := db.Select(&fenceList, "select id,name,fence_type,imei,value,fence_switch from fence")
+	if err != nil {
+		log.Error("exec failed, ", err)
+		return
+	}
+
+	for _, fence := range fenceList {
+		setKey := "fenceset"
+		infoKey := fmt.Sprintf("fenceinfo_%v", fence.Imei)
+		pipe.SAdd(context.Background(), setKey, fence.Imei)
+		pipe.HSet(context.Background(), infoKey, map[string]interface{}{
+			strconv.FormatInt(fence.Id, 10): fence.Value,
 		})
 	}
 	pipe.Exec(context.Background())
@@ -69,7 +92,7 @@ func syncFromBinlog() {
 	// 开始同步 binlog
 	streamer, err := syncer.StartSync(mysql.Position{
 		Name: "mysql-bin.000007",
-		Pos:  0,
+		Pos:  132983966,
 	})
 	if err != nil {
 		fmt.Println("Error starting syncer:", err)
@@ -99,17 +122,21 @@ func syncFromBinlog() {
 						syncDeleteDevice(e)
 					}
 				}
+				if string(e.Table.Table) == "fence" {
+					switch ev.Header.EventType {
+					case replication.WRITE_ROWS_EVENTv2:
+						syncInsertFence(e)
+					case replication.UPDATE_ROWS_EVENTv2:
+						syncUpdateFence(e)
+					case replication.DELETE_ROWS_EVENTv2:
+						syncDeleteFence(e)
+					}
+				}
 			}
 		case *replication.QueryEvent:
 		default:
 		}
 	}
-}
-
-func main() {
-	initRedis()
-	loadData()
-	syncFromBinlog()
 }
 
 func syncInsertDevice(e *replication.RowsEvent) {
@@ -167,4 +194,74 @@ func syncDeleteDevice(e *replication.RowsEvent) {
 		pipe.Del(context.Background(), key)
 	}
 	pipe.Exec(context.Background())
+}
+
+func syncInsertFence(e *replication.RowsEvent) {
+	for _, row := range e.Rows {
+		var fence model.Fence
+		err := model.MapToStruct(row, &fence)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		setKey := "fenceset"
+		infoKey := fmt.Sprintf("fenceinfo_%v", fence.Imei)
+
+		pipe.SAdd(context.Background(), setKey, fence.Imei)
+		pipe.HSet(context.Background(), infoKey, map[string]interface{}{
+			strconv.FormatInt(fence.Id, 10): fence.Value,
+		})
+	}
+	pipe.Exec(context.Background())
+}
+
+func syncUpdateFence(e *replication.RowsEvent) {
+	for i := 0; i < len(e.Rows); i += 2 {
+		var oldFence, newFence model.Fence
+		err := model.MapToStruct(e.Rows[i], &oldFence)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		err = model.MapToStruct(e.Rows[i+1], &newFence)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		if oldFence != newFence {
+			infoKey := fmt.Sprintf("fenceinfo_%v", newFence.Imei)
+			//不能修改围栏状态
+
+			pipe.HSet(context.Background(), infoKey, map[string]interface{}{
+				strconv.FormatInt(newFence.Id, 10): newFence.Value,
+			})
+		}
+	}
+	pipe.Exec(context.Background())
+}
+
+func syncDeleteFence(e *replication.RowsEvent) {
+	for _, row := range e.Rows {
+		var fence model.Fence
+		err := model.MapToStruct(row, &fence)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		setKey := "fenceset"
+		infoKey := fmt.Sprintf("fenceinfo_%v", fence.Imei)
+		pipe.HDel(context.Background(), infoKey, strconv.FormatInt(fence.Id, 10))
+		hashLen, _ := rdb.HLen(context.Background(), "test").Result()
+		if hashLen <= 0 {
+			pipe.SRem(context.Background(), setKey, fence.Imei)
+		}
+	}
+	pipe.Exec(context.Background())
+}
+
+func main() {
+	initStorage()
+	loadDevice()
+	loadFence()
+	syncFromBinlog()
 }

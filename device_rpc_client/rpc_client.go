@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"context"
@@ -15,19 +16,21 @@ func main() {
 	}
 	defer conn.Close()
 
-	//sendCmd(conn)
+	sendCmd(conn)
 	//openShortRecord(conn)
-	vorRecordSwitch(conn)
+	//vorRecordSwitch(conn)
 }
 
 func sendCmd(conn *grpc.ClientConn) {
 	client := proto.NewDeviceServiceClient(conn)
 
 	req := &proto.SendCmdRequest{
-		Imei:    13320527396,
-		Content: "SL DP114.215.190.173#8881#",
-		//Content: "SL MIC1",
+		Imei: 13320465357,
+		//Content: "SL DP114.215.190.173#8881#",
+		Content: "SL VERSION",
 	}
+	fmt.Println(req.String())
+
 	resp, err := client.SendCmd(context.Background(), req)
 
 	if err != nil {
@@ -44,6 +47,7 @@ func openShortRecord(conn *grpc.ClientConn) {
 		Imei:    26191697155,
 		Seconds: 10,
 	}
+	fmt.Println(req.String())
 	resp, err := client.OpenShortRecord(context.Background(), req)
 
 	if err != nil {
