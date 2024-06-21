@@ -23,12 +23,12 @@ var (
 func initStorage() {
 	var err error
 	rdb = redis.NewClient(&redis.Options{
-		Addr: "47.107.69.24:6480",
+		Addr: "8.149.138.101:6480",
 		DB:   0,
 	})
 	pipe = rdb.Pipeline().(*redis.Pipeline)
 
-	address := fmt.Sprintf("%v:%v@tcp(%v)/xx?parseTime=true&timeout=5s&readTimeout=10s", "admin", "shht", "47.107.69.24:8000")
+	address := fmt.Sprintf("%v:%v@tcp(%v)/findme?parseTime=true&timeout=5s&readTimeout=10s", "admin", "shht", "8.149.138.101:8000")
 	db, err = sqlx.Open("mysql", address)
 	if err != nil {
 		log.Error("open mysql failed,", err)
@@ -82,7 +82,7 @@ func syncFromBinlog() {
 	cfg := replication.BinlogSyncerConfig{
 		ServerID: 100,
 		Flavor:   "mysql",
-		Host:     "47.107.69.24",
+		Host:     "8.149.138.101",
 		Port:     8000,
 		User:     "admin",
 		Password: "shht",
@@ -91,8 +91,8 @@ func syncFromBinlog() {
 
 	// 开始同步 binlog
 	streamer, err := syncer.StartSync(mysql.Position{
-		Name: "mysql-bin.000009",
-		Pos:  9337795,
+		Name: "mysql-bin.000003",
+		Pos:  0,
 	})
 	if err != nil {
 		fmt.Println("Error starting syncer:", err)
@@ -111,7 +111,7 @@ func syncFromBinlog() {
 		switch e := ev.Event.(type) {
 		case *replication.RowsEvent:
 			// 处理行数据变更事件
-			if string(e.Table.Schema) == "xx" {
+			if string(e.Table.Schema) == "findme" {
 				if string(e.Table.Table) == "device" {
 					switch ev.Header.EventType {
 					case replication.WRITE_ROWS_EVENTv2:

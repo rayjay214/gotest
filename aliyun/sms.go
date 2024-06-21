@@ -4,7 +4,6 @@ import (
 	"github.com/aliyun-sdk/sms-go"
 	"gopkg.in/ini.v1"
 	"log"
-	"time"
 )
 
 var err error
@@ -17,8 +16,8 @@ func init() {
 
 	ak = section.Key("key").Value()
 	sk = section.Key("secret").Value()
-	sn = "千讯互联"
-	tc = "SMS_262415663"
+	sn = section.Key("sn").Value()
+	tc = section.Key("tc").Value()
 	client, err = sms.New(ak, sk, sms.SignName(sn), sms.Template(tc))
 	if err != nil {
 		log.Fatalln(err)
@@ -30,8 +29,7 @@ func Send() {
 		sms.Mobile("19925233886"),
 		sms.Parameter(map[string]string{
 			"imei":  "1234567891",
-			"timei": time.Now().Format("2006-01-02 15:04:05"),
-			"alarm": "低电告警",
+			"alarm": "低电",
 		}),
 	)
 	if err != nil {

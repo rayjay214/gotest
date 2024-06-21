@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/redis/go-redis/v9"
@@ -117,11 +119,28 @@ func test3() {
 	fmt.Println(hashLen)
 }
 
+func test4() {
+	data := "123456"
+
+	// 计算SHA-256哈希值
+	hash := sha256.New()
+	hash.Write([]byte(data))
+	hashedBytes := hash.Sum(nil)
+
+	// 将哈希值转换为十六进制字符串
+	hashedString := hex.EncodeToString(hashedBytes)
+	uppercase := strings.ToUpper(hashedString)
+
+	fmt.Println("原始数据:", data)
+	fmt.Println("SHA-256哈希值:", uppercase)
+}
+
 func main() {
 	//test()
 	//test1()
 	//test2()
-	test3()
+	//test3()
+	test4()
 
 	/*
 		user := "ipc@email.gps666.net"
